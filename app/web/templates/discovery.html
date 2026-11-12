@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Discussion Discovery{% endblock %}
+{% block content %}
+<h1>Discussion Discovery</h1>
+<p class="muted">Search links built from X advanced search. No API and no cost: you open the link, read the timeline, and save the conversations worth your time.</p>
+
+<section class="panel">
+  <h2>Build a search</h2>
+  <form method="get" action="/discovery" class="row">
+    <label class="grow">Terms
+      <input name="terms" value="{{ terms }}" placeholder="e.g. RISC-V, chiplets, sim-to-real, tyre model">
+    </label>
+    <label>Mode
+      <select name="mode">
+        {% for key, config in modes.items() %}<option value="{{ key }}" {{ 'selected' if active_mode == key }}>{{ config.label }}</option>{% endfor %}
+      </select>
+    </label>
+    <button>Build</button>
+  </form>
+  {% if custom %}
+    <div class="search-result">
+      <code>{{ custom.query }}</code>
+      <div class="toolbar">
+        <a class="button" href="{{ custom.url }}" target="_blank" rel="noopener">Open in X</a>
+        <form method="post" action="/discovery/saved">
+          <input type="hidden" name="label" value="{{ terms }}">
+          <input type="hidden" name="query" value="{{ custom.query }}">
+          <button class="ghost small">Save search</button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+{% if saved %}
+<section class="panel">
+  <h2>Saved searches</h2>
+  {% for search in saved %}
+    <div class="search-row">
+      <div>
+        <a href="https://x.com/search?q={{ search.query|urlencode }}&src=typed_query&f=live" target="_blank" rel="noopener">{{ search.label }}</a>
+        <p class="muted"><code>{{ search.query }}</code></p>
+      </div>
+      <form method="post" action="/discovery/saved/{{ search.id }}/delete"><button class="ghost small">Remove</button></form>
+    </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% for card in cards %}
+  <section class="panel">
+    <div class="toolbar">
+      <div>
+        <h2>{{ card.domain.name }}</h2>
+        <p class="muted">{{ card.domain.blurb }}</p>
+      </div>
+    </div>
+    {% for search in card.searches %}
+      <div class="search-row">
+        <div>
+          <a href="{{ search.url }}" target="_blank" rel="noopener">{{ search.label }}</a>
+          <p class="muted">{{ search.hint }}</p>
+        </div>
+        <form method="post" action="/discovery/saved">
+          <input type="hidden" name="label" value="{{ card.domain.name }} · {{ search.label }}">
+          <input type="hidden" name="query" value="{{ search.query }}">
+          <input type="hidden" name="domain" value="{{ card.domain.key }}">
+          <button class="ghost small">Save</button>
+        </form>
+      </div>
+    {% endfor %}
+    {% if card.topics %}
+      <h3>From your recent posts</h3>
+      {% for topic in card.topics %}
+        <div class="search-row">
+          <a href="{{ topic.url }}" target="_blank" rel="noopener">{{ topic.label }}</a>
+        </div>
+      {% endfor %}
+    {% endif %}
+    <p class="muted">Found something? <a href="/discussions/new?domain={{ card.domain.key }}">Paste the conversation</a> and generate a reply.</p>
+  </section>
+{% endfor %}
+{% endblock %}

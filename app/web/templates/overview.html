@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<h1>Overview</h1>
+<p class="muted">Prepared for you to review. Nothing is published, liked or replied to automatically.</p>
+<section class="figures">
+  {% for label, value in figures %}<div><span class="num">{{ value }}</span><span class="muted">{{ label }}</span></div>{% endfor %}
+</section>
+{% if not profile.interests and not profile.style_notes %}
+<p class="notice">Your writing profile is empty. <a href="/settings">Tell the assistant what you care about</a> and the drafts get noticeably less generic.</p>
+{% endif %}
+<div class="columns">
+  <section>
+    <div class="toolbar"><h2>Ready for review</h2><a class="small-link" href="/content">All posts</a></div>
+    {% for draft in drafts %}
+      <article class="draft">
+        <div class="meta"><span class="badge">{{ domain_for(draft.domain).name }}</span><span>{{ label_for_format(draft.post_format) }}</span>{% if draft.scheduled_for %}<span>for {{ draft.scheduled_for.strftime('%d %b') }}</span>{% endif %}</div>
+        <p>{{ draft.body }}</p>
+        <div class="toolbar">
+          <span class="muted">{{ draft.body|length }} chars</span>
+          <a class="small-link" href="/content/{{ draft.id }}">Review</a>
+        </div>
+      </article>
+    {% else %}
+      <p class="empty">No drafts yet. Run the daily job or write one by hand.</p>
+    {% endfor %}
+  </section>
+  <section>
+    <h2>Worth replying to</h2>
+    {% for discussion in discussions %}
+      <div class="draft">
+        <div class="meta"><span class="badge">{{ domain_for(discussion.domain).name }}</span><span>{{ discussion.author or 'Unknown' }}</span></div>
+        <p><a href="/discussions/{{ discussion.id }}">{{ discussion.title }}</a></p>
+      </div>
+    {% else %}
+      <p class="empty">No saved discussions. <a href="/discovery">Find a conversation</a>.</p>
+    {% endfor %}
+
+    <h2 style="margin-top:2rem">Assistant activity</h2>
+    {% for run in runs %}
+      <div class="run">
+        <span class="status {{ run.status }}">{{ run.status }}</span>
+        <span>{{ run.job_name }}</span>
+        <span class="muted">{{ run.items_created }} created, {{ run.started_at.strftime('%d %b %H:%M') }} UTC</span>
+        {% if run.error %}<p class="error">{{ run.error }}</p>{% endif %}
+      </div>
+    {% else %}
+      <p class="empty">No background jobs have run yet.</p>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

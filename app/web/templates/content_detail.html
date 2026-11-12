@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ item.topic }}{% endblock %}
+{% block content %}
+<p><a class="small-link" href="/content">← Content Studio</a></p>
+<div class="toolbar">
+  <h1>{{ item.topic }}</h1>
+  <span class="status {{ item.status }}">{{ status_labels.get(item.status, item.status) }}</span>
+</div>
+<div class="meta">
+  <span class="badge">{{ domain_for(item.domain).name }}</span>
+  <span>{{ label_for_format(item.post_format) }}</span>
+  {% if item.discipline %}<span>{{ item.discipline }}</span>{% endif %}
+  {% if item.scheduled_for %}<span>prepared {{ item.scheduled_for.strftime('%d %b %Y') }}</span>{% endif %}
+  {% if item.published_at %}<span>published {{ item.published_at.strftime('%d %b %Y') }}</span>{% endif %}
+</div>
+
+<section class="actions">
+  {% if item.status == 'draft' %}
+    <form method="post" action="/content/{{ item.id }}/status"><input type="hidden" name="action" value="approve"><button>Approve</button></form>
+    <form method="post" action="/content/{{ item.id }}/status"><input type="hidden" name="action" value="reject"><button class="ghost">Reject</button></form>
+  {% elif item.status == 'approved' %}
+    <form method="post" action="/content/{{ item.id }}/status"><input type="hidden" name="action" value="publish"><button>Mark as published</button></form>
+    <form method="post" action="/content/{{ item.id }}/status"><input type="hidden" name="action" value="draft"><button class="ghost">Back to draft</button></form>
+  {% elif item.status == 'published' %}
+    <form method="post" action="/content/{{ item.id }}/status"><input type="hidden" name="action" value="draft"><button class="ghost">Move back to draft</button></form>
+  {% else %}
+    <form method="post" action="/content/{{ item.id }}/status"><input type="hidden" name="action" value="draft"><button>Restore to drafts</button></form>
+  {% endif %}
+  <form method="post" action="/content/{{ item.id }}/delete" onsubmit="return confirm('Delete this post?')"><button class="danger ghost">Delete</button></form>
+</section>
+
+{% if thread_posts %}
+<section class="panel">
+  <div class="toolbar"><h2>Thread · {{ thread_posts|length }} posts</h2><span class="muted">Paste one at a time into X.</span></div>
+  {% for post in thread_posts %}
+    <article class="thread-post" id="thread-{{ post.id }}">
+      <div class="meta"><span>{{ loop.index }}/{{ thread_posts|length }}</span><span class="{{ 'over' if post.body|length > 280 }}">{{ post.body|length }} chars</span>
+        <button type="button" class="ghost small" data-copy="#thread-{{ post.id }}">Copy</button></div>
+      <p>{{ post.body }}</p>
+    </article>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>Post</h2>
+  <textarea id="body-field" class="body-field" rows="{{ 12 if not thread_posts else 6 }}">{{ item.body }}</textarea>
+  <div class="toolbar">
+    <span id="char-count" class="muted">{{ item.body|length }} chars</span>
+    <button type="button" class="ghost small" data-copy="#body-field">Copy full post</button>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Edit</h2>
+  <form method="post" action="/content/{{ item.id }}/update" class="form">
+    <label>Topic<input name="topic" value="{{ item.topic }}" required></label>
+    <div class="row">
+      <label>Field
+        <select name="domain">
+          {% for domain in domains %}<option value="{{ domain.key }}" {{ 'selected' if item.domain == domain.key }}>{{ domain.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Discipline<input name="discipline" value="{{ item.discipline }}"></label>
+      <label>Format
+        <select name="post_format">
+          {% for key, label in format_labels.items() %}<option value="{{ key }}" {{ 'selected' if item.post_format == key }}>{{ label }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <label>Angle<input name="angle" value="{{ item.angle }}"></label>
+    <label>Body<textarea name="body" rows="10">{{ item.body }}</textarea></label>
+    <label>Why this is worth posting <span class="muted">optional, for your own filing</span>
+      <textarea name="rationale" rows="2">{{ item.rationale }}</textarea>
+    </label>
+    <button>Save changes</button>
+  </form>
+</section>
+
+<script>
+(function () {
+  var field = document.getElementById("body-field");
+  var label = document.getElementById("char-count");
+  if (!field || !label) return;
+  var update = function () {
+    var n = field.value.length;
+    label.textContent = n + " chars" + (n > 280 ? " · over 280" : "");
+    label.className = n > 280 ? "error" : "muted";
+  };
+  field.addEventListener("input", update);
+  update();
+})();
+</script>
+{% endblock %}

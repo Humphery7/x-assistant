@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Engagement Assistant{% endblock %}
+{% block content %}
+<h1>Engagement Assistant</h1>
+<p class="muted">{{ replies|length }} drafted replies. Each one is written to add something, not to agree.</p>
+
+<div class="filters">
+  <a class="pill {{ 'on' if not active_status }}" href="/replies">All</a>
+  <a class="pill {{ 'on' if active_status == 'draft' }}" href="/replies?status=draft">Draft</a>
+  <a class="pill {{ 'on' if active_status == 'approved' }}" href="/replies?status=approved">Approved</a>
+  <a class="pill {{ 'on' if active_status == 'published' }}" href="/replies?status=published">Published</a>
+</div>
+
+{% for reply in replies %}
+  {% set discussion = discussions.get(reply.discussion_id) %}
+  <article class="panel reply">
+    <div class="meta">
+      <span class="status {{ reply.status }}">{{ reply.status }}</span>
+      <span class="{{ 'over' if reply.body|length > 280 }}">{{ reply.body|length }} chars</span>
+      {% if discussion %}<a href="/discussions/{{ discussion.id }}">{{ discussion.title }}</a>{% endif %}
+    </div>
+    {% if reply.approach %}<p class="approach">Approach: {{ reply.approach }}</p>{% endif %}
+    <p class="reply-body" id="reply-{{ reply.id }}">{{ reply.body }}</p>
+    <div class="toolbar">
+      <button type="button" class="ghost small" data-copy="#reply-{{ reply.id }}">Copy</button>
+      {% if discussion and discussion.url %}<a class="small-link" href="{{ discussion.url }}" target="_blank" rel="noopener">Open on X</a>{% endif %}
+      <form method="post" action="/replies/{{ reply.id }}/status">
+        <input type="hidden" name="action" value="{{ 'publish' if reply.status == 'approved' else 'approve' }}">
+        <button class="small">{{ 'Mark published' if reply.status == 'approved' else 'Approve' }}</button>
+      </form>
+      {% if reply.status != 'draft' %}
+        <form method="post" action="/replies/{{ reply.id }}/status">
+          <input type="hidden" name="action" value="draft">
+          <button class="ghost small">Back to draft</button>
+        </form>
+      {% endif %}
+    </div>
+  </article>
+{% else %}
+  <p class="empty">No replies yet. <a href="/discussions">Open a saved discussion</a> to draft one.</p>
+{% endfor %}
+{% endblock %}

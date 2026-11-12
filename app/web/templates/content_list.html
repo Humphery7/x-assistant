@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Content Studio{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1>Content Studio</h1>
+  <a class="button ghost" href="/content/new">Write one</a>
+</div>
+<form method="post" action="/content/generate" class="row generate-row">
+  <label>Generate a draft now
+    <span class="row">
+      <select name="domain">
+        <option value="">Any field</option>
+        {% for domain in domains %}<option value="{{ domain.key }}">{{ domain.name }}</option>{% endfor %}
+      </select>
+      <select name="post_format">
+        <option value="">Auto format</option>
+        {% for key, label in format_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+      </select>
+      <button>Generate</button>
+    </span>
+  </label>
+</form>
+<p class="muted">{{ items|length }} posts. Review, edit, approve, then copy and publish by hand.</p>
+
+<form method="get" action="/content" class="filters">
+  <a class="pill {{ 'on' if not active_status }}" href="/content{% if active_domain %}?domain={{ active_domain }}{% endif %}">All</a>
+  {% for key, label in status_labels.items() %}
+    <a class="pill {{ 'on' if active_status == key }}" href="/content?status={{ key }}{% if active_domain %}&domain={{ active_domain }}{% endif %}">{{ label }} <span class="muted">{{ counts[key] }}</span></a>
+  {% endfor %}
+  <select name="domain" onchange="this.form.submit()">
+    <option value="">Every field</option>
+    {% for domain in domains %}
+      <option value="{{ domain.key }}" {{ 'selected' if active_domain == domain.key }}>{{ domain.name }}</option>
+    {% endfor %}
+  </select>
+  {% if active_status %}<input type="hidden" name="status" value="{{ active_status }}">{% endif %}
+</form>
+
+<div class="grid">
+  {% for item in items %}
+    <article class="card">
+      <div class="meta">
+        <span class="badge">{{ domain_for(item.domain).name }}</span>
+        <span>{{ label_for_format(item.post_format) }}</span>
+        <span class="status {{ item.status }}">{{ status_labels.get(item.status, item.status) }}</span>
+      </div>
+      <h3><a href="/content/{{ item.id }}">{{ item.topic }}</a></h3>
+      <p class="excerpt">{{ item.body }}</p>
+      <div class="toolbar">
+        <span class="muted">{{ item.body|length }} chars</span>
+        {% if item.discipline %}<span class="muted">{{ item.discipline }}</span>{% endif %}
+      </div>
+    </article>
+  {% else %}
+    <p class="empty">Nothing matches that filter.</p>
+  {% endfor %}
+</div>
+{% endblock %}

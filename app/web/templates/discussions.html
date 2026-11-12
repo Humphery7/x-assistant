@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Saved Discussions{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <h1>Saved Discussions</h1>
+  <a class="button" href="/discussions/new">Add a conversation</a>
+</div>
+<p class="muted">{{ discussions|length }} conversations kept. Paste one from X, then let the assistant draft a reply you can edit.</p>
+
+<div class="filters">
+  <a class="pill {{ 'on' if not active_status }}" href="/discussions">All</a>
+  <a class="pill {{ 'on' if active_status == 'saved' }}" href="/discussions?status=saved">Saved</a>
+  <a class="pill {{ 'on' if active_status == 'replied' }}" href="/discussions?status=replied">Replied</a>
+  <a class="pill {{ 'on' if active_status == 'archived' }}" href="/discussions?status=archived">Archived</a>
+</div>
+
+<div class="grid">
+  {% for discussion in discussions %}
+    <article class="card">
+      <div class="meta">
+        <span class="badge">{{ domain_for(discussion.domain).name }}</span>
+        <span class="status {{ discussion.status }}">{{ discussion.status }}</span>
+        <span>{{ reply_counts.get(discussion.id, 0) }} replies</span>
+      </div>
+      <h3><a href="/discussions/{{ discussion.id }}">{{ discussion.title }}</a></h3>
+      <p class="excerpt">{{ discussion.text }}</p>
+      <div class="meta">
+        {% if discussion.author %}<span>{{ discussion.author }}</span>{% endif %}
+        {% if discussion.url %}<a href="{{ discussion.url }}" target="_blank" rel="noopener">Open on X</a>{% endif %}
+      </div>
+    </article>
+  {% else %}
+    <p class="empty">Nothing saved yet. <a href="/discovery">Search X for a conversation</a>.</p>
+  {% endfor %}
+</div>
+{% endblock %}

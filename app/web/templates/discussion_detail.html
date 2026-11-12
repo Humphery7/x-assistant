@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ discussion.title }}{% endblock %}
+{% block content %}
+<p><a class="small-link" href="/discussions">← Saved discussions</a></p>
+<div class="toolbar">
+  <h1>{{ discussion.title }}</h1>
+  <span class="status {{ discussion.status }}">{{ discussion.status }}</span>
+</div>
+<div class="meta">
+  <span class="badge">{{ domain_for(discussion.domain).name }}</span>
+  {% if discussion.author %}<span>{{ discussion.author }}</span>{% endif %}
+  {% if discussion.url %}<a href="{{ discussion.url }}" target="_blank" rel="noopener">Open on X</a>{% endif %}
+</div>
+
+<section class="panel">
+  <h2>Original post</h2>
+  <blockquote class="discussion-text">{{ discussion.text }}</blockquote>
+  {% if discussion.notes %}<p class="muted">Your notes: {{ discussion.notes }}</p>{% endif %}
+  <div class="toolbar">
+    <button type="button" class="ghost small" data-copy data-copy-text="{{ discussion.text }}">Copy</button>
+    <form method="post" action="/discussions/{{ discussion.id }}/status">
+      <input type="hidden" name="action" value="{{ 'save' if discussion.status == 'archived' else 'archive' }}">
+      <button class="ghost small">{{ 'Unarchive' if discussion.status == 'archived' else 'Archive' }}</button>
+    </form>
+    <form method="post" action="/discussions/{{ discussion.id }}/delete" onsubmit="return confirm('Delete this conversation and its replies?')">
+      <button class="danger ghost small">Delete</button>
+    </form>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Generate a reply</h2>
+  {% if not ai_ready %}
+    <p class="notice">Set GEMINI_API_KEY to enable reply generation.</p>
+  {% endif %}
+  <form method="post" action="/discussions/{{ discussion.id }}/replies" class="row">
+    <label class="grow">Optional angle
+      <input name="focus" placeholder="e.g. push back on the cost claim, or add a field example">
+    </label>
+    <button {{ 'disabled' if not ai_ready }}>Draft reply</button>
+  </form>
+  <p class="muted">Replies aim to add something the post did not say. They stay under 280 characters and never start with a compliment.</p>
+</section>
+
+{% for reply in replies %}
+  <article class="panel reply">
+    <div class="meta">
+      <span class="status {{ reply.status }}">{{ reply.status }}</span>
+      <span class="{{ 'over' if reply.body|length > 280 }}">{{ reply.body|length }} chars</span>
+      <span class="muted">{{ reply.created_at.strftime('%d %b %H:%M') }} UTC</span>
+    </div>
+    {% if reply.approach %}<p class="approach">Approach: {{ reply.approach }}</p>{% endif %}
+    <p class="reply-body" id="reply-{{ reply.id }}">{{ reply.body }}</p>
+    <div class="toolbar">
+      <button type="button" class="ghost small" data-copy="#reply-{{ reply.id }}">Copy</button>
+      {% if reply.status != 'published' %}
+        <form method="post" action="/replies/{{ reply.id }}/status">
+          <input type="hidden" name="action" value="{{ 'publish' if reply.status == 'approved' else 'approve' }}">
+          <button class="small">{{ 'Mark published' if reply.status == 'approved' else 'Approve' }}</button>
+        </form>
+      {% endif %}
+      {% if reply.status != 'draft' %}
+        <form method="post" action="/replies/{{ reply.id }}/status">
+          <input type="hidden" name="action" value="draft">
+          <button class="ghost small">Back to draft</button>
+        </form>
+      {% endif %}
+    </div>
+    <form method="post" action="/replies/{{ reply.id }}/rewrite" class="row rewrite">
+      <label class="grow">Rewrite note
+        <input name="note" placeholder="e.g. shorter, less certain, add the measurement">
+      </label>
+      <button class="ghost small" {{ 'disabled' if not ai_ready }}>Rewrite</button>
+    </form>
+  </article>
+{% else %}
+  <p class="empty">No replies yet.</p>
+{% endfor %}
+{% endblock %}

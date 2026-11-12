@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Add conversation{% endblock %}
+{% block content %}
+<h1>Add a conversation</h1>
+<p class="muted">Paste the post text. The URL is only a reference, nothing is fetched.</p>
+<form method="post" action="/discussions/new" class="form">
+  <div class="row">
+    <label class="grow">Post URL<input name="url" value="{{ url }}" placeholder="https://x.com/..."></label>
+    <label>Author<input name="author" placeholder="@handle or name"></label>
+  </div>
+  <div class="row">
+    <label class="grow">Label<input name="title" value="{{ title }}" placeholder="Short name for this conversation"></label>
+    <label>Field
+      <select name="domain">
+        {% for option in domains %}<option value="{{ option.key }}" {{ 'selected' if option.key == selected_domain }}>{{ option.name }}</option>{% endfor %}
+      </select>
+    </label>
+  </div>
+  <label>The post text
+    <textarea name="text" rows="9" required placeholder="Paste the post or thread here"></textarea>
+  </label>
+  <label>Your notes <span class="muted">optional — why it matters, what you might add</span>
+    <textarea name="notes" rows="3"></textarea>
+  </label>
+  <button>Save conversation</button>
+</form>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}New post{% endblock %}
+{% block content %}
+<h1>Write a post</h1>
+<p class="muted">Anything you write here goes into the same review flow as generated drafts.</p>
+<form method="post" action="/content/new" class="form">
+  <label>Topic
+    <input name="topic" required placeholder="What is this post actually about?">
+  </label>
+  <div class="row">
+    <label>Field
+      <select name="domain">
+        {% for domain in domains %}<option value="{{ domain.key }}">{{ domain.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Discipline
+      <input name="discipline" placeholder="e.g. Control engineering">
+    </label>
+    <label>Format
+      <select name="post_format">
+        {% for key, label in format_labels.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+  </div>
+  <label>Angle <span class="muted">optional — the point you want to make</span>
+    <input name="angle" placeholder="The take you want a reader to argue with">
+  </label>
+  <label>Post body
+    <textarea name="body" rows="10" required></textarea>
+  </label>
+  <p class="muted">For a thread, separate each post with a line containing only ---</p>
+  <button>Save draft</button>
+</form>
+{% endblock %}

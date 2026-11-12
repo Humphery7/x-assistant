@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+jinja2
+python-multipart
+itsdangerous
+python-dotenv
+psycopg[binary]
+google-genai
+pytest
+httpx

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} | X Assistant</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand">X Assistant</div>
+  <nav>
+    {% for item in nav_items %}
+      <a href="{{ item.path }}" class="{{ 'active' if request.url.path == item.path or (item.path != '/' and request.url.path.startswith(item.path)) }}">{{ item.label }}</a>
+    {% endfor %}
+  </nav>
+  <form method="post" action="/logout"><button class="link">Sign out</button></form>
+</aside>
+<main>
+  {% if request.query_params.get('error') %}<p class="error notice">{{ request.query_params.get('error') }}</p>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+<script>
+document.addEventListener("click", function (event) {
+  var button = event.target.closest("[data-copy]");
+  if (!button) return;
+  var target = document.querySelector(button.dataset.copy);
+  var text = target ? (target.value !== undefined ? target.value : target.innerText) : (button.dataset.copyText || "");
+  var done = function () {
+    var label = button.textContent;
+    button.textContent = "Copied";
+    setTimeout(function () { button.textContent = label; }, 1200);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(done, function () {});
+  } else {
+    var area = document.createElement("textarea");
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand("copy");
+    document.body.removeChild(area);
+    done();
+  }
+});
+</script>
+</body>
+</html>
