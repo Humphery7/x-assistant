@@ -27,3 +27,6 @@ dist/
 # Editors
 .vscode/
 .idea/
+
+playground.py
+typescript.js

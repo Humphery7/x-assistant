@@ -42,6 +42,21 @@ def test_every_navigation_page_renders():
         assert response.status_code == 200, path
 
 
+def test_favicon_is_served_at_root_and_linked():
+    client = _client()
+    icon = client.get("/favicon.ico")
+    assert icon.status_code == 200
+    assert icon.headers["content-type"].startswith("image/")
+
+    svg = client.get("/static/favicon.svg")
+    assert svg.status_code == 200
+    assert "image/svg" in svg.headers["content-type"]
+
+    page = client.get("/login").text
+    assert "/static/favicon.svg" in page
+    assert "/static/favicon.ico" in page
+
+
 def test_manual_post_flows_from_draft_to_published():
     client = _client()
     created = client.post(

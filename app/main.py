@@ -2,6 +2,7 @@ import secrets
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -33,6 +34,13 @@ app.add_middleware(
     https_only=settings.secure_cookies,
 )
 app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse(WEB_DIR / "static" / "favicon.ico")
+
+
 app.include_router(login_routes.router)
 app.include_router(overview_routes.router)
 app.include_router(content_routes.router)

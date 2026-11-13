@@ -6,6 +6,7 @@ from sqlmodel.pool import StaticPool
 
 from app.background_jobs.daily_content_job import POSTS_PER_DAY, run_daily_content_job
 from app.background_jobs.job_run_log import JobRun
+from app.background_jobs.run_daily import run_once
 from app.features.content_studio.models import ContentItem, ContentStatus
 
 TODAY = date(2026, 11, 12)
@@ -51,3 +52,13 @@ def test_failed_job_is_logged_and_leaves_no_partial_drafts(session):
     assert run.status == "failed" and "quota" in run.error
     assert session.exec(select(ContentItem)).all() == []
     assert run_daily_content_job(session, FakeAi(), TODAY).status == "completed"
+
+
+def test_cli_reads_the_result_without_a_detached_instance():
+    cli_engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(cli_engine)
+
+    assert run_once(FakeAi(), cli_engine) == f"Created {POSTS_PER_DAY} drafts."
+    assert run_once(FakeAi(), cli_engine) == "Already done today."
